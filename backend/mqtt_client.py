@@ -2,7 +2,7 @@ import json
 
 import paho.mqtt.client as mqtt
 
-from backend.state import digital_twin_state
+from backend.state import digital_twin_states
 
 from database.connection import SessionLocal
 from database.models import SensorReading
@@ -11,17 +11,16 @@ from database.models import SensorReading
 BROKER_HOST = "localhost"
 BROKER_PORT = 1883
 
-TOPIC = "farm/FARM_001/sensors"
-IRRIGATION_TOPIC = "farm/FARM_001/commands/irrigation"
+SENSOR_TOPIC = "farm/+/sensors"
 
 
 def on_connect(client, userdata, flags, reason_code, properties):
 
     print("Connected to MQTT broker")
 
-    client.subscribe(TOPIC)
+    client.subscribe(SENSOR_TOPIC)
 
-    print(f"Subscribed to: {TOPIC}")
+    print(f"Subscribed to: {SENSOR_TOPIC}")
 
 
 def on_message(client, userdata, message):
@@ -32,17 +31,31 @@ def on_message(client, userdata, message):
             message.payload.decode()
         )
 
-        digital_twin_state.temperature = payload["temperature"]
-        digital_twin_state.humidity = payload["humidity"]
-        digital_twin_state.soil_moisture = payload["soil_moisture"]
-        digital_twin_state.light = payload["light"]
-        digital_twin_state.rain_probability = payload["rain_probability"]
-        digital_twin_state.leaf_wetness = payload["leaf_wetness"]
+        farm_id = payload["farm_id"]
 
+        if farm_id not in digital_twin_states:
+
+            print(
+                f"Unknown farm received: {farm_id}"
+            )
+
+            return
+
+        farm = digital_twin_states[farm_id]
+
+        # Update the correct Digital Twin
+        farm.temperature = payload["temperature"]
+        farm.humidity = payload["humidity"]
+        farm.soil_moisture = payload["soil_moisture"]
+        farm.light = payload["light"]
+        farm.rain_probability = payload["rain_probability"]
+        farm.leaf_wetness = payload["leaf_wetness"]
+
+        # Save sensor reading
         db = SessionLocal()
 
         reading = SensorReading(
-            farm_id=payload["farm_id"],
+            farm_id=farm_id,
             temperature=payload["temperature"],
             humidity=payload["humidity"],
             soil_moisture=payload["soil_moisture"],
@@ -57,8 +70,12 @@ def on_message(client, userdata, message):
 
         print("Digital Twin Updated")
         print(
+            f"Farm: {farm_id} | "
+            f"Crop: {farm.crop}"
+        )
+        print(
             f"Soil Moisture: "
-            f"{digital_twin_state.soil_moisture}%"
+            f"{farm.soil_moisture}%"
         )
         print("Sensor reading saved to database.")
 
@@ -92,12 +109,17 @@ def start_mqtt_client():
 
 def publish_irrigation_command(
     client,
+    farm_id,
     amount=10.0
 ):
-    """Send a virtual irrigation command to the simulator."""
+    """Send a virtual irrigation command to a selected farm."""
+
+    topic = (
+        f"farm/{farm_id}/commands/irrigation"
+    )
 
     payload = {
-        "farm_id": "FARM_001",
+        "farm_id": farm_id,
         "action": "IRRIGATE",
         "amount": amount
     }
@@ -105,12 +127,13 @@ def publish_irrigation_command(
     message = json.dumps(payload)
 
     result = client.publish(
-        IRRIGATION_TOPIC,
+        topic,
         message
     )
 
     print("Irrigation command published")
-    print(f"Topic: {IRRIGATION_TOPIC}")
+    print(f"Farm: {farm_id}")
+    print(f"Topic: {topic}")
     print(f"Message: {message}")
     print(f"Publish status: {result.rc}")
 

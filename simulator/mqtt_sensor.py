@@ -3,7 +3,7 @@ import time
 
 import paho.mqtt.client as mqtt
 
-from simulator.farm import create_default_farm
+from simulator.farm import create_farms
 from simulator.sensor import simulate_sensor_reading
 from backend.irrigation import apply_irrigation
 
@@ -11,8 +11,8 @@ from backend.irrigation import apply_irrigation
 BROKER_HOST = "localhost"
 BROKER_PORT = 1883
 
-TOPIC = "farm/FARM_001/sensors"
-IRRIGATION_TOPIC = "farm/FARM_001/commands/irrigation"
+SENSOR_TOPIC_PREFIX = "farm"
+IRRIGATION_TOPIC_PREFIX = "farm"
 
 
 def create_sensor_payload(farm):
@@ -26,12 +26,12 @@ def create_sensor_payload(farm):
         "soil_moisture": round(farm.soil_moisture, 2),
         "light": round(farm.light, 2),
         "rain_probability": round(farm.rain_probability, 2),
-        "leaf_wetness": round(farm.leaf_wetness, 2)
+        "leaf_wetness": round(farm.leaf_wetness, 2),
     }
 
 
-def create_irrigation_callback(farm):
-    """Create MQTT callback for virtual irrigation commands."""
+def create_irrigation_callback(farms):
+    """Create MQTT callback for irrigation commands."""
 
     def on_irrigation_command(client, userdata, message):
 
@@ -40,6 +40,18 @@ def create_irrigation_callback(farm):
             payload = json.loads(
                 message.payload.decode()
             )
+
+            farm_id = payload.get("farm_id")
+
+            if farm_id not in farms:
+
+                print(
+                    f"Unknown farm received: {farm_id}"
+                )
+
+                return
+
+            farm = farms[farm_id]
 
             amount = float(
                 payload.get("amount", 10.0)
@@ -52,6 +64,8 @@ def create_irrigation_callback(farm):
 
             print("===================================")
             print("VIRTUAL IRRIGATION ACTIVATED")
+            print(f"Farm              : {farm_id}")
+            print(f"Crop              : {farm.crop}")
             print(f"Water added       : {result['water_added']}%")
             print(
                 f"Old soil moisture: "
@@ -72,15 +86,17 @@ def create_irrigation_callback(farm):
     return on_irrigation_command
 
 
-def create_mqtt_client(farm):
-    """Create and connect an MQTT client."""
+def create_mqtt_client(farms):
+    """Create and connect the MQTT client."""
 
     client = mqtt.Client(
         mqtt.CallbackAPIVersion.VERSION2,
-        client_id="virtual-farm-sensor"
+        client_id="virtual-farm-sensors"
     )
 
-    client.on_message = create_irrigation_callback(farm)
+    client.on_message = create_irrigation_callback(
+        farms
+    )
 
     client.connect(
         BROKER_HOST,
@@ -88,9 +104,19 @@ def create_mqtt_client(farm):
         60
     )
 
-    client.subscribe(
-        IRRIGATION_TOPIC
-    )
+    for farm_id in farms:
+
+        topic = (
+            f"{IRRIGATION_TOPIC_PREFIX}/"
+            f"{farm_id}/commands/irrigation"
+        )
+
+        client.subscribe(topic)
+
+        print(
+            f"Listening for irrigation commands: "
+            f"{topic}"
+        )
 
     client.loop_start()
 
@@ -99,47 +125,69 @@ def create_mqtt_client(farm):
 
 if __name__ == "__main__":
 
-    farm = create_default_farm()
+    farms = create_farms()
 
-    client = create_mqtt_client(farm)
+    client = create_mqtt_client(farms)
 
-    print("=== MQTT VIRTUAL SENSOR ===")
+    print("=== MQTT VIRTUAL FARM SENSOR SYSTEM ===")
     print(
         f"Connected to MQTT broker: "
         f"{BROKER_HOST}:{BROKER_PORT}"
     )
-    print("Publishing sensor data...")
-    print(
-        f"Listening for irrigation commands: "
-        f"{IRRIGATION_TOPIC}"
-    )
+
+    print("Publishing sensor data for:")
+
+    for farm in farms.values():
+
+        print(
+            f"  {farm.farm_id} | "
+            f"{farm.crop}"
+        )
+
     print("Press CTRL+C to stop.")
 
     try:
 
         while True:
 
-            farm = simulate_sensor_reading(farm)
+            for farm in farms.values():
 
-            payload = create_sensor_payload(farm)
+                farm = simulate_sensor_reading(
+                    farm
+                )
 
-            message = json.dumps(payload)
+                topic = (
+                    f"{SENSOR_TOPIC_PREFIX}/"
+                    f"{farm.farm_id}/sensors"
+                )
 
-            result = client.publish(
-                TOPIC,
-                message
-            )
+                payload = create_sensor_payload(
+                    farm
+                )
 
-            print("-----------------------------------")
-            print(f"Topic: {TOPIC}")
-            print(f"Message: {message}")
-            print(f"Publish status: {result.rc}")
+                message = json.dumps(
+                    payload
+                )
+
+                result = client.publish(
+                    topic,
+                    message
+                )
+
+                print("-----------------------------------")
+                print(f"Farm: {farm.farm_id}")
+                print(f"Topic: {topic}")
+                print(f"Message: {message}")
+                print(
+                    f"Publish status: "
+                    f"{result.rc}"
+                )
 
             time.sleep(2)
 
     except KeyboardInterrupt:
 
-        print("\nMQTT sensor stopped.")
+        print("\nMQTT sensor system stopped.")
 
     finally:
 

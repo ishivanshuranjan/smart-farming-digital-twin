@@ -1,19 +1,150 @@
 # 🌱 Smart Farming Digital Twin
 
-A software-only Smart Farming Digital Twin that simulates a real agricultural environment using virtual sensors, MQTT communication, FastAPI, machine learning, SQLite and Streamlit.
+A **software-only Smart Farming Digital Twin** that simulates agricultural conditions using virtual farms, virtual sensors, MQTT communication, FastAPI, SQLite, machine learning and Streamlit.
 
-The system continuously monitors virtual farm conditions, predicts irrigation requirements and disease risk, makes rule-based farm decisions, and allows the user to trigger virtual irrigation directly from the dashboard.
+The system continuously receives simulated environmental readings, maintains a digital representation of each virtual farm, stores sensor history, generates ML predictions, applies a hybrid decision engine and provides a dashboard for monitoring and virtual irrigation control.
+
+> **Important:** This project is a software simulation for academic/demo purposes. Sensor values and ML labels are synthetic and should not be treated as real agricultural recommendations without validation using real-world data and agricultural expertise.
 
 ---
 
-## 📌 Project Overview
+## 📌 Project Highlights
 
-Traditional smart farming systems often depend on physical IoT sensors and actuators.
+- 🌱 **3 virtual farms** with different crops
+- 📡 **Virtual IoT sensors** generating live readings
+- 📬 **MQTT** communication through Mosquitto
+- ⚡ **FastAPI** REST backend
+- 🔄 Real-time **Digital Twin** state
+- 🗄️ **SQLite** historical sensor database
+- 🤖 **Random Forest** ML predictions
+- 🧠 **Hybrid ML + rule-based** farm decision engine
+- 💧 **Virtual irrigation** through MQTT commands
+- 🔐 Simple **HTTP Basic Authentication**
+- 📊 **Streamlit** dashboard with interactive Plotly charts
+- 🔄 **5-second live dashboard refresh**
+- 📈 Historical sensor visualization
+- 🗂️ Recent sensor readings table
+- 🐍 Completely Python-based
+- 💻 **No physical hardware required**
 
-This project demonstrates the same overall concept using a completely software-based environment.
+---
 
-A **Virtual Farm** generates changing environmental conditions such as:
+## 🎯 Project Objective
 
+The objective is to demonstrate how a Digital Twin can combine:
+
+```text
+Simulation
+    +
+Virtual IoT Sensors
+    +
+MQTT Communication
+    +
+Real-Time Digital Twin
+    +
+Database
+    +
+Machine Learning
+    +
+Decision Making
+    +
+Interactive Dashboard
+```
+
+into a single software platform for smart farming experimentation and demonstration.
+
+---
+
+## 🏗️ System Architecture
+
+```text
+                   ┌────────────────────────┐
+                   │      Virtual Farms     │
+                   │ FARM_001 / 002 / 003   │
+                   └────────────┬───────────┘
+                                │
+                                ▼
+                   ┌────────────────────────┐
+                   │    Virtual Sensors     │
+                   │ Temp / Humidity / Soil │
+                   │ Light / Rain / Wetness │
+                   └────────────┬───────────┘
+                                │
+                                │ MQTT
+                                ▼
+                   ┌────────────────────────┐
+                   │   Mosquitto Broker     │
+                   │       localhost:1883   │
+                   └────────────┬───────────┘
+                                │
+                                ▼
+                   ┌────────────────────────┐
+                   │    FastAPI Backend     │
+                   │ REST API + MQTT Client │
+                   └────────────┬───────────┘
+                                │
+              ┌─────────────────┼─────────────────┐
+              │                 │                 │
+              ▼                 ▼                 ▼
+      ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+      │ Digital Twin │  │   SQLite DB  │  │ ML Prediction│
+      │ Current State│  │ SensorHistory│  │ Irrigation + │
+      │ Per Farm     │  │              │  │ Disease Risk │
+      └──────────────┘  └──────────────┘  └──────┬───────┘
+                                                 │
+                                                 ▼
+                                      ┌────────────────────┐
+                                      │ Decision Engine    │
+                                      │ ML + Safety Rules  │
+                                      └──────────┬─────────┘
+                                                 │
+                                                 ▼
+                                      ┌────────────────────┐
+                                      │ Streamlit Dashboard│
+                                      │ Monitor + Predict  │
+                                      │ Decide + Control   │
+                                      └──────────┬─────────┘
+                                                 │
+                                      POST /irrigate
+                                                 │
+                                                 ▼
+                                      ┌────────────────────┐
+                                      │ MQTT Irrigation    │
+                                      │ Virtual Actuator   │
+                                      └──────────┬─────────┘
+                                                 │
+                                                 ▼
+                                      Soil Moisture Updated
+```
+
+---
+
+## 🌾 Virtual Farms
+
+The simulator currently provides three independent software farms:
+
+| Farm ID | Crop | Initial Soil Moisture |
+|---|---|---:|
+| FARM_001 | Tomato | 45% |
+| FARM_002 | Wheat | 60% |
+| FARM_003 | Rice | 70% |
+
+Each farm maintains its own temperature, humidity, soil moisture, light, rain probability and leaf wetness.
+
+The simulator also uses crop-specific simulation targets so values do not permanently drift toward extreme boundary values.
+
+---
+
+## 🔄 How the System Works
+
+### 1. Virtual Farm
+
+The virtual farm represents the current simulated agricultural environment.
+
+Each farm contains:
+
+- Farm ID
+- Crop
 - Temperature
 - Humidity
 - Soil Moisture
@@ -21,290 +152,290 @@ A **Virtual Farm** generates changing environmental conditions such as:
 - Rain Probability
 - Leaf Wetness
 
-These values are generated by virtual sensors and transmitted through **MQTT**.
+### 2. Virtual Sensors
 
-The FastAPI backend receives the sensor data, updates the **Digital Twin**, stores readings in SQLite and uses machine learning models to predict:
+`simulator/sensor.py` changes the farm conditions over time.
 
-- Irrigation requirement
-- Crop disease risk
+The simulator uses small random variations, environmental effects and target-based stabilization to create continuously changing readings.
 
-A decision engine then combines ML predictions with deterministic safety rules to produce a final farm recommendation.
+Soil moisture is affected by factors such as:
 
-The Streamlit dashboard provides real-time monitoring, predictions, decisions, historical charts and a virtual irrigation control.
+- Temperature
+- Light
+- Rain probability
+- Natural moisture movement
+- Virtual irrigation
 
----
+### 3. MQTT Communication
 
-## ✨ Key Features
+`simulator/mqtt_sensor.py` publishes sensor readings through MQTT.
 
-- 🌱 Software-based virtual farm simulation
-- 📡 Virtual sensor data generation
-- 📬 MQTT communication using Mosquitto
-- ⚡ FastAPI backend
-- 🔄 Real-time Digital Twin state
-- 🗄️ SQLite sensor-history database
-- 🤖 Machine learning irrigation prediction
-- 🦠 Machine learning disease-risk prediction
-- 🧠 Hybrid ML + rule-based decision engine
-- 📊 Interactive Streamlit dashboard
-- 💧 Virtual irrigation control
-- 🔄 Automatic dashboard refresh after irrigation
-- 📈 Historical sensor visualization
-- 🐍 Completely Python-based implementation
-- 💻 No physical hardware required
-
----
-
-## 🏗️ System Architecture
+Example sensor topics:
 
 ```text
-                    ┌──────────────────────┐
-                    │     Virtual Farm     │
-                    │   Farm Simulation    │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │   Virtual Sensors    │
-                    │ Temp / Humidity /    │
-                    │ Soil / Light / Rain  │
-                    └──────────┬───────────┘
-                               │
-                               │ MQTT
-                               ▼
-                    ┌──────────────────────┐
-                    │  Mosquitto Broker    │
-                    │      Port 1883       │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │    FastAPI Backend   │
-                    │ MQTT Subscriber       │
-                    │ REST API              │
-                    └──────────┬───────────┘
-                               │
-              ┌────────────────┼─────────────────┐
-              │                │                 │
-              ▼                ▼                 ▼
-      ┌──────────────┐ ┌──────────────┐ ┌────────────────┐
-      │ Digital Twin │ │   SQLite DB  │ │ ML Prediction  │
-      │ Current Farm │ │ Sensor       │ │ Irrigation +   │
-      │ State        │ │ History      │ │ Disease Risk   │
-      └──────────────┘ └──────────────┘ └───────┬────────┘
-                                                 │
-                                                 ▼
-                                      ┌────────────────────┐
-                                      │  Decision Engine   │
-                                      │ ML + Safety Rules  │
-                                      └─────────┬──────────┘
-                                                │
-                                                ▼
-                                      ┌────────────────────┐
-                                      │ Streamlit Dashboard│
-                                      │ Monitoring +       │
-                                      │ Control            │
-                                      └─────────┬──────────┘
-                                                │
-                                                │ Irrigation
-                                                ▼
-                                      ┌────────────────────┐
-                                      │ Virtual Irrigation │
-                                      │ Soil Moisture      │
-                                      │ Updated            │
-                                      └────────────────────┘
-🔄 How the System Works
-1. Virtual Farm
-
-The virtual farm represents the simulated agricultural environment.
-
-It maintains the current state of the farm, including environmental variables and crop information.
-
-2. Virtual Sensors
-
-The sensor simulator generates changing sensor readings.
-
-The simulated parameters include:
-
-Temperature
-Humidity
-Soil Moisture
-Light
-Rain Probability
-Leaf Wetness
-
-The sensor values change over time to simulate a real farming environment.
-
-3. MQTT Communication
-
-The virtual sensor publishes JSON sensor data to the MQTT broker.
-
-Example topic:
-
 farm/FARM_001/sensors
+farm/FARM_002/sensors
+farm/FARM_003/sensors
+```
 
-The FastAPI backend subscribes to this topic and receives the sensor readings.
+Irrigation commands use:
 
-4. Digital Twin
+```text
+farm/FARM_001/commands/irrigation
+farm/FARM_002/commands/irrigation
+farm/FARM_003/commands/irrigation
+```
 
-The received sensor data updates the Digital Twin state.
+### 4. Digital Twin
 
-The Digital Twin represents the current virtual condition of the farm.
+The FastAPI MQTT client receives the readings and updates the corresponding farm state.
 
-For example:
+The Digital Twin therefore represents the latest known virtual condition of each simulated farm.
 
-Farm ID: FARM_001
-Crop: Tomato
-Temperature: 29.22 °C
-Humidity: 61.12 %
-Soil Moisture: 30.81 %
-Light: 93.17 %
-Rain Probability: 4.31 %
-Leaf Wetness: 40.05 %
-5. Database
+### 5. Database
 
-Every received sensor reading is stored in SQLite.
+Every received sensor reading is saved in:
 
-Database:
-
+```text
 database/farm.db
+```
 
-The database stores historical sensor information that can be used for visualization and future analysis.
+The SQLite database stores historical readings that are later used by the dashboard for visualization.
 
-6. Machine Learning
+### 6. Machine Learning
 
-Two Random Forest classification models are used.
+The project uses two Random Forest classification models.
 
-Irrigation Prediction
+#### Irrigation Model
 
 Predicts whether irrigation is required.
 
 Output:
 
+```text
 0 → Irrigation not required
 1 → Irrigation required
+```
 
-Important features include:
+Relevant environmental features include:
 
-Soil Moisture
-Rain Probability
-Temperature
-Humidity
-Light
-Leaf Wetness
-Disease Risk Prediction
+- Soil Moisture
+- Rain Probability
+- Temperature
+- Humidity
+- Light
+- Leaf Wetness
 
-Predicts:
+#### Disease Model
 
+Predicts environmental disease risk:
+
+```text
 LOW
 MEDIUM
 HIGH
+```
 
-Environmental features are used to estimate disease risk.
+The trained models are stored in:
 
-🧠 Hybrid Decision Engine
+```text
+ml/models/
+```
 
-The system does not rely only on machine learning.
+### 7. Hybrid Decision Engine
 
-The final farm decision combines:
+The final farm decision is not based only on machine learning.
 
-Machine Learning Prediction
-           +
+The system combines:
+
+```text
+ML Prediction
+      +
 Deterministic Safety Rules
-           ↓
-      Final Decision
+      ↓
+Final Farm Decision
+```
 
-This provides additional safety for extreme farm conditions.
+The decision engine can produce states such as:
 
-For example, if soil moisture becomes critically low, the rule-based system can require irrigation even if the ML model does not predict irrigation.
-
-The system can classify farm status as:
-
-NORMAL
-WARNING
+```text
+HEALTHY
+ATTENTION REQUIRED
 CRITICAL
-💧 Virtual Irrigation
+```
 
-The dashboard contains a:
+It also reports:
 
-💧 Start Irrigation
+- Irrigation status
+- Irrigation priority
+- Disease status
+- Disease priority
+- Disease risk
+- Reason for the decision
+- Recommended action
 
-button.
+---
 
-When clicked:
+## 💧 Virtual Irrigation
 
+Virtual irrigation demonstrates the complete software actuator flow.
+
+```text
 Streamlit Dashboard
         ↓
 POST /irrigate
         ↓
 FastAPI
         ↓
-MQTT irrigation command
+MQTT Irrigation Command
         ↓
 Virtual Farm Simulator
         ↓
-Soil Moisture increases
+Soil Moisture Updated
         ↓
-New sensor reading
+Next Sensor Reading
         ↓
-Dashboard refresh
+Dashboard Refresh
+```
 
-No physical pump, Arduino, ESP32 or other hardware is required.
+No physical pump, relay, Arduino, ESP32, Raspberry Pi or wiring is involved.
 
-The irrigation operation is completely simulated in software.
+The dashboard also shows irrigation feedback including:
 
-📊 Dashboard
+- Selected farm
+- Command time
+- Soil moisture before irrigation
+- Virtual water command
+- Current soil moisture
+- Observed change
+
+The simulator continues to apply environmental effects after irrigation, so the next sensor values can move slightly instead of remaining fixed.
+
+---
+
+## 🔐 Authentication
+
+The FastAPI protected endpoints use **HTTP Basic Authentication**.
+
+The demo credentials are stored in a local `.env` file:
+
+```text
+APP_USERNAME=admin
+APP_PASSWORD=admin123
+```
+
+The `.env` file is excluded from Git using `.gitignore`.
+
+Protected API functionality includes:
+
+```text
+/farms
+/farm
+/sensor-history
+/prediction
+/decision
+/irrigate
+```
+
+The public health/API information endpoints remain available without authentication.
+
+> This authentication is intended for a local academic/demo system, not production security. Use stronger credential management and HTTPS for production deployment.
+
+---
+
+## 📊 Dashboard
 
 The Streamlit dashboard provides:
 
-Current Farm Conditions
-Temperature
-Humidity
-Soil Moisture
-Light
-Rain Probability
-Leaf Wetness
-ML Predictions
-Irrigation requirement
-Disease risk
-Farm Decision
-Farm status
-Irrigation status
-Irrigation priority
-Disease risk
-Recommended action
-Sensor History
+### Live Farm Conditions
 
-Interactive charts are provided for:
+- Temperature
+- Soil Moisture
+- Humidity
+- Light
+- Rain Probability
+- Leaf Wetness
 
-Temperature
-Soil Moisture
-Humidity
+### Farm Selection
 
-Recent sensor readings are also displayed in a table.
+The user can switch between:
 
-🛠️ Technology Stack
-Technology	Purpose
-Python	Core programming language
-FastAPI	Backend REST API
-Pydantic	Data validation
-SQLAlchemy	Database ORM
-SQLite	Sensor-history database
-Paho MQTT	MQTT communication
-Mosquitto	MQTT broker
-scikit-learn	Machine learning
-Random Forest	Classification models
-Pandas	Data processing
-NumPy	Numerical processing
-Streamlit	Dashboard
-Plotly	Interactive charts
-Joblib	ML model persistence
-Git	Version control
-GitHub	Source-code hosting
-📁 Project Structure
+```text
+FARM_001 → Tomato
+FARM_002 → Wheat
+FARM_003 → Rice
+```
+
+### Machine Learning
+
+Displays:
+
+- Irrigation prediction
+- Disease-risk prediction
+
+### Decision Intelligence
+
+Displays:
+
+- Farm status
+- Irrigation status
+- Priority
+- Disease risk
+- Recommended action
+- Decision details
+
+### Virtual Irrigation
+
+A button allows the user to send an MQTT irrigation command for the selected virtual farm.
+
+### Sensor History
+
+Interactive Plotly charts show:
+
+- Soil moisture
+- Temperature
+- Humidity
+
+Recent readings can also be inspected in a table.
+
+### Live Updates
+
+The dashboard automatically refreshes the live data area every **5 seconds**.
+
+---
+
+## 🛠️ Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Python | Core programming language |
+| FastAPI | REST API backend |
+| Pydantic | API/data validation through FastAPI stack |
+| SQLAlchemy | SQLite ORM |
+| SQLite | Sensor history database |
+| Paho MQTT | MQTT client communication |
+| Mosquitto | Local MQTT broker |
+| scikit-learn | Machine learning |
+| Random Forest | Classification models |
+| Pandas | Data processing |
+| NumPy | Numerical processing |
+| Joblib | ML model persistence |
+| Streamlit | Dashboard |
+| Plotly | Interactive charts |
+| python-dotenv | Environment configuration |
+| Git | Version control |
+| GitHub | Source-code hosting |
+
+---
+
+## 📁 Project Structure
+
+```text
 smart-farming-digital-twin/
 │
 ├── backend/
 │   ├── __init__.py
+│   ├── auth.py
 │   ├── decision_engine.py
 │   ├── irrigation.py
 │   ├── main.py
@@ -323,7 +454,8 @@ smart-farming-digital-twin/
 │   ├── __init__.py
 │   ├── connection.py
 │   ├── init_db.py
-│   └── models.py
+│   ├── models.py
+│   └── farm.db
 │
 ├── ml/
 │   ├── __init__.py
@@ -340,134 +472,225 @@ smart-farming-digital-twin/
 │   ├── mqtt_sensor.py
 │   └── sensor.py
 │
+├── .env                  # local only; not committed
 ├── .gitignore
 ├── README.md
 └── requirements.txt
-⚙️ Installation
+```
+
+---
+
+## ⚙️ Installation
 
 Clone the repository:
 
+```bash
 git clone https://github.com/ishivanshuranjan/smart-farming-digital-twin.git
+```
 
 Enter the project:
 
+```bash
 cd smart-farming-digital-twin
+```
 
-Create a virtual environment:
+Create the virtual environment:
 
+```bash
 python3 -m venv venv
+```
 
-Activate it:
+Activate it on macOS/Linux:
 
-macOS / Linux
+```bash
 source venv/bin/activate
-Windows
-venv\Scripts\activate
+```
 
 Install dependencies:
 
+```bash
 pip install -r requirements.txt
-📬 MQTT Broker
+```
 
-The project uses Mosquitto as the local MQTT broker.
+Create `.env` in the project root:
 
-Make sure Mosquitto is installed and running on:
+```text
+APP_USERNAME=admin
+APP_PASSWORD=admin123
+```
 
-localhost:1883
-🗄️ Initialize Database
+Initialize the database:
 
-Run:
-
+```bash
 python3 -m database.init_db
-▶️ Running the Project
+```
+
+---
+
+## 📬 MQTT Broker
+
+The project uses Mosquitto locally.
+
+Make sure the broker is running on:
+
+```text
+localhost:1883
+```
+
+On macOS, for a background broker process:
+
+```bash
+mosquitto -d
+```
+
+---
+
+## ▶️ Running the Project
 
 The project uses four main processes.
 
-Terminal 1 — MQTT Broker
+### Terminal 1 — MQTT Broker
 
-Start Mosquitto if it is not already running.
-
+```bash
 mosquitto
-Terminal 2 — FastAPI Backend
+```
+
+Or:
+
+```bash
+mosquitto -d
+```
+
+### Terminal 2 — FastAPI Backend
+
+```bash
 uvicorn backend.main:app --reload
+```
 
 Backend:
 
+```text
 http://127.0.0.1:8000
+```
 
-API documentation:
+Swagger documentation:
 
+```text
 http://127.0.0.1:8000/docs
-Terminal 3 — Virtual Sensor
+```
+
+### Terminal 3 — Virtual Sensor Simulator
+
+```bash
 python3 -m simulator.mqtt_sensor
+```
 
-The simulator continuously publishes virtual sensor readings.
+The simulator continuously publishes data for all three virtual farms.
 
-Terminal 4 — Dashboard
+### Terminal 4 — Streamlit Dashboard
+
+```bash
 streamlit run dashboard/app.py
+```
 
 Open:
 
+```text
 http://localhost:8501
-🔌 API Endpoints
-Endpoint	Method	Purpose
-/	GET	API information
-/health	GET	Backend health check
-/farm	GET	Current Digital Twin state
-/sensor-history	GET	Historical sensor readings
-/prediction	GET	ML predictions
-/decision	GET	Final farm decision
-/irrigate	POST	Trigger virtual irrigation
-/docs	GET	Interactive API documentation
-🧪 Example Irrigation Workflow
+```
 
-The user clicks:
+Login using the credentials stored in `.env`.
 
-💧 Start Irrigation
+---
+
+## 🔌 API Endpoints
+
+| Endpoint | Method | Authentication | Purpose |
+|---|---|---|---|
+| `/` | GET | No | API information |
+| `/health` | GET | No | Backend health check |
+| `/farms` | GET | Yes | List virtual farms |
+| `/farm` | GET | Yes | Current selected farm state |
+| `/sensor-history` | GET | Yes | Historical sensor readings |
+| `/prediction` | GET | Yes | ML predictions |
+| `/decision` | GET | Yes | Hybrid farm decision |
+| `/irrigate` | POST | Yes | Trigger virtual irrigation |
+| `/docs` | GET | No | Interactive API documentation |
+
+Example:
+
+```text
+GET /farm?farm_id=FARM_001
+```
+
+Authenticated example:
+
+```bash
+curl -u admin:admin123 \
+"http://127.0.0.1:8000/farm?farm_id=FARM_001"
+```
+
+---
+
+## 🧪 Example Irrigation Workflow
+
+Before irrigation:
+
+```text
+Soil Moisture = 59.5%
+```
 
 The dashboard sends:
 
+```text
 POST /irrigate
+```
 
-FastAPI publishes an MQTT command:
+FastAPI publishes:
 
-farm/FARM_001/commands/irrigation
+```text
+farm/FARM_002/commands/irrigation
+```
 
-The virtual farm receives the command and increases soil moisture.
+The virtual simulator processes the command.
 
-The next sensor reading reflects the updated moisture level.
+The resulting sensor reading can then show:
 
-The dashboard then refreshes and displays the new farm condition.
+```text
+Soil Moisture = 68.7%
+```
 
-🤖 Machine Learning Models
+The dashboard records the irrigation event and displays the before/current change.
 
-The project uses Random Forest classifiers for:
+---
 
-Irrigation Model
+## 🤖 ML Data and Limitations
 
-Predicts whether irrigation is needed based on environmental conditions.
+The project includes a generated synthetic dataset:
 
-Disease Model
+```text
+data/raw/farm_sensor_data.csv
+```
 
-Predicts environmental disease risk:
+The dataset and labels are intended for demonstration and software-pipeline development.
 
-LOW
-MEDIUM
-HIGH
+They should **not** be interpreted as validated agricultural ground truth.
 
-The trained models are stored using Joblib.
+For a real agricultural deployment, the models would need:
 
-ml/models/
-Important Note
+- Real farm sensor data
+- Proper domain-specific labels
+- Model evaluation using appropriate agricultural datasets
+- Validation by agricultural/domain experts
+- Monitoring for model drift
 
-The current dataset and labels are synthetic and intended for demonstration of the Digital Twin and ML pipeline.
+---
 
-The predictions should not be treated as real agricultural recommendations without validation using real-world agricultural data and domain expertise.
+## 🔐 Software-Only Design
 
-🔐 Software-Only Design
+This project intentionally does **not** require:
 
-This project intentionally does not require:
-
+```text
 Arduino
 ESP32
 Raspberry Pi
@@ -477,52 +700,70 @@ Water pumps
 Relay modules
 Wiring
 AWS infrastructure
+```
 
 All IoT behavior is simulated in software.
 
-This makes the project easy to develop, test and demonstrate on a normal computer.
+This makes the project suitable for development and demonstration on a normal computer.
 
-🚀 Future Enhancements
+---
+
+## ✅ Current Implementation Status
+
+The following functionality is implemented:
+
+```text
+✅ Virtual farm simulation
+✅ Three virtual farms
+✅ Crop-specific sensor simulation
+✅ MQTT sensor publishing
+✅ Mosquitto broker
+✅ FastAPI backend
+✅ MQTT backend subscriber
+✅ Per-farm Digital Twin state
+✅ SQLite sensor-history storage
+✅ ML irrigation prediction
+✅ ML disease-risk prediction
+✅ Hybrid decision engine
+✅ Virtual irrigation
+✅ HTTP Basic Authentication
+✅ Streamlit dashboard
+✅ Multi-farm selection
+✅ Interactive charts
+✅ Recent readings table
+✅ 5-second live refresh
+✅ Irrigation result feedback
+✅ Git/GitHub integration
+```
+
+---
+
+## 🚀 Future Enhancements
 
 Possible future improvements include:
 
-Real agricultural datasets
-Weather API integration
-Multiple virtual farms
-More crop types
-Advanced time-series forecasting
-Automated irrigation scheduling
-Authentication and authorization
-Cloud deployment
-Docker containerization
-Real IoT hardware integration
-Advanced disease detection using computer vision
-Historical analytics and reporting
-Mobile-friendly dashboard
-🎯 Project Objective
+- Real agricultural datasets
+- Weather API integration
+- Advanced time-series forecasting
+- Automated irrigation scheduling
+- Role-based access control
+- Cloud deployment
+- Docker containerization
+- Advanced computer-vision disease detection
+- Historical analytics and reporting
+- Mobile-friendly dashboard
+- Real IoT hardware integration
 
-The main objective is to demonstrate how a Digital Twin can combine:
+---
 
-Simulation
-    +
-IoT Communication
-    +
-Real-Time Data
-    +
-Database
-    +
-Machine Learning
-    +
-Decision Making
-    +
-Interactive Visualization
+## 👨‍💻 Author
 
-into a single smart farming software platform.
-
-👨‍💻 Author
-
-Shivanshu Ranjan
+**Shivanshu Ranjan**
 
 GitHub:
 
 https://github.com/ishivanshuranjan
+
+Repository:
+
+https://github.com/ishivanshuranjan/smart-farming-digital-twin

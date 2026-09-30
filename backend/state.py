@@ -1,13 +1,11 @@
-from simulator.farm import FarmState
+from simulator.farm import create_farms
 
 
-digital_twin_state = FarmState(
-    farm_id="FARM_001",
-    crop="Tomato",
-    temperature=28.0,
-    humidity=65.0,
-    soil_moisture=45.0,
-    light=70.0,
-    rain_probability=15.0,
-    leaf_wetness=30.0,
-)
+# Create independent Digital Twin states for all farms.
+digital_twin_states = create_farms()
+
+
+# Keep FARM_001 as the default state temporarily.
+# This preserves compatibility with the existing backend
+# while the multi-farm API is being added.
+digital_twin_state = digital_twin_states["FARM_001"]
